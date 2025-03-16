@@ -1,0 +1,66 @@
+---
+title: "Forecast of Air Passengers" 
+subtitle: "Using Prophet to predict future number of air passengers" 
+author: "Jacklin Thiruloganathan"
+date: "13/03/2025" 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab 
+    highlight: tango
+---
+ 
+```{r, echo=FALSE}
+# This code will display the QMUL logo at the top right of the page
+# Do not change this code
+htmltools::img(src = knitr::image_uri("images/QMlogo.png"),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:10px; width:20%;')
+```
+The purpose of this project to use Prophet in R Studio to forecast the amount of air passengers in the future using the AirPassengers dataset, which is the monthly totals of international airline passengers from 1949 to 1960.
+
+```{r}
+library(prophet)
+library(zoo)
+data("AirPassengers")
+summary(AirPassengers)
+AirPassengers.dataframe = data.frame(
+  ds = zoo::as.yearmon(time(AirPassengers)),
+  y = AirPassengers)
+model<- lm(AirPassengers ~ time(AirPassengers))
+summary(model)#linear regression
+```
+
+Firstly, we must use the command install.packages(prophet) to install the package prophet. We then load the Airpassengers dataset. To use the prophet model, we need to change the time series into a data frame containing 2 columns: ds is the date, and y is the number of passengers. Running the code ?AirPassengers provides some description of this dataset.We can fit AirPassengers data to a linear regression model using lm(). 
+
+```{r}
+prophet_model =prophet::prophet(AirPassengers.dataframe)
+```
+The Prophet model is used to fit the data which can enable us to predict future number of passengers. 
+
+```{r}
+future_passengers = prophet::make_future_dataframe(prophet_model, periods =8, freq = "quarter")
+
+```
+Using 'make_future_dataframe() we create a future dataframe for the next 8 quarters after 1961.
+This will be used to forecast the number of passengers.
+```{r}
+predicted_passengers = predict(prophet_model,future_passengers)
+```
+The predict function uses prophet_model to create the forecast of the future passengers.
+
+```{r}
+plot(prophet_model,predicted_passengers,xlab ="Year", ylab ="Amount of Passengers", main = "AirPassengers Forecast")
+```
+This plot shows the year against number of air passengers.From 1949 to 1960, the plot illustrates an upward trend where the black dots represent the actual data of air passengers and the blue line indicates the predicted values of them, which was done by the prophet model. We can say there is increasing trend, seasonal variation and moderate noise.
+
+```{r}
+model0 = stats::decompose(AirPassengers)
+plot(model0)
+```
+This shows the decomposition of the time series. The observed plot shows the actual data. A rise in airline passengers from 1949 to 1960 is shown via the linear, upward trend. The seasonal plot shows the periodic pattern(highs in August and lows in November every year). Looking at the random graph, the errors aren't really spread around 0 which isn't as good.
+
+
+
+
